@@ -1,6 +1,6 @@
 import time
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-import pandas as pd
+# import pandas as pd
 import struct
 
 # 修正后的完整测量点配置（根据文档1重新整理）
@@ -71,26 +71,28 @@ def main():
         raise ConnectionError("Modbus connection failed")
 
     try:
-        df = pd.DataFrame(columns=[point["name"] for point in MEASUREMENT_POINTS])
-        timestamps = []
+        #df = pd.DataFrame(columns=[point["name"] for point in MEASUREMENT_POINTS])
+        #timestamps = []
 
         while True:
             measurements = read_modbus_registers(client)
-            measurements["Timestamp"] = pd.Timestamp.now()
+            print(data)
+            #measurements["Timestamp"] = pd.Timestamp.now()
 
-            df = df.append(measurements, ignore_index=True)
-            timestamps.append(pd.Timestamp.now())
+            #df = df.append(measurements, ignore_index=True)
+            #timestamps.append(pd.Timestamp.now())
 
             # 动态采样间隔（示例：压力每1秒，温度每5秒）
-            time.sleep(1 if any(p in measurements for p in ["pressure"]) else 5)
+            #time.sleep(1 if any(p in measurements for p in ["pressure"]) else 5)
+            time.sleep(10)
 
     except KeyboardInterrupt:
         print("\nData collection stopped by user")
     finally:
         # 数据完整性校验
-        if not df.empty:
-            print(f"\nData integrity check: {len(df)} records collected")
-            df.to_csv("modbus_data.csv", index=False)
+        #if not df.empty:
+            #print(f"\nData integrity check: {len(df)} records collected")
+            #df.to_csv("modbus_data.csv", index=False)
         client.close()
 
 
