@@ -1,6 +1,6 @@
 sqlalchemy:
   # 数据库连接字符串
-  SQLALCHEMY_DATABASE_URI: 'mysql+pymysql://root:123456@127.0.0.1:3306/oil_well'
+  SQLALCHEMY_DATABASE_URI: 'mysql+pymysql://root:oil-well#102112@127.0.0.1:3306/oil_well'
   # 是否追踪数据库修改
   SQLALCHEMY_TRACK_MODIFICATIONS: False
   # 是否显示底层执行的SQL语句
