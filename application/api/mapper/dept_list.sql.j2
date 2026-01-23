@@ -1,0 +1,11 @@
+SELECT t1.*
+FROM (SELECT t1.id,
+             t1.`name`            AS `name`,
+             t1.parent_id         AS parentId,
+             t1.`level`           AS `level`,
+             t1.full_parent_id    AS fullParentId,
+             GROUP_CONCAT(t2.`name` ORDER BY t2.`level` SEPARATOR ',') AS fullParentName
+    FROM (SELECT * FROM dept WHERE valid = 1) AS t1
+    LEFT JOIN dept AS t2 ON FIND_IN_SET(t2.id, t1.full_parent_id )
+    GROUP BY t1.id) AS t1
+    ORDER BY t1.`level`

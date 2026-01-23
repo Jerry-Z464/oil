@@ -1,0 +1,16 @@
+SELECT SQL_CALC_FOUND_ROWS
+        id,
+        code,
+        alarm_type,
+        level,
+        metric,
+        current_value,
+        threshold,
+        suggestion,
+        alarm_time,
+        status
+FROM alarm
+    where valid = 1
+    {% if startTime %} AND alarm_time >= '{{ startTime }}' {% endif %}
+    {% if endTime %} AND alarm_time <= '{{ endTime }}' {% endif %}
+    LIMIT {{ confined }}, {{ offset }};

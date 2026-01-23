@@ -1,0 +1,17 @@
+sqlalchemy:
+  # 数据库连接字符串
+  SQLALCHEMY_DATABASE_URI: 'mysql+pymysql://root:123456@127.0.0.1:3306/oil_well'
+  # 是否追踪数据库修改
+  SQLALCHEMY_TRACK_MODIFICATIONS: False
+  # 是否显示底层执行的SQL语句
+  SQLALCHEMY_ECHO: False
+
+server:
+  host: "0.0.0.0"
+  port: 8086
+  debug: True # 修改可自动生效，无需重启服务；生产环境debug必须为False
+
+time:
+  token: 24 # token失效时间 单位:小时
+  interval: 60 # 采集数据间隔
+

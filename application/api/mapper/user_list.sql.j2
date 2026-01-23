@@ -1,0 +1,28 @@
+SELECT SQL_CALC_FOUND_ROWS
+        t1.id,
+        t1.name,
+        t1.email,
+        t1.phone_number phoneNumber,
+        t1.role,
+        t1.work,
+        t4.id deptId,
+        t4.name deptName
+FROM account t1
+        LEFT JOIN dept t4 ON t4.id = t1.dept_id AND t4.valid = 1
+    where t1.work = 1
+    {% if name and name != '' %}
+      AND t1.name LIKE CONCAT('%', '{{ name }}', '%')
+    {% endif %}
+    {% if email and email != '' %}
+      AND t1.email LIKE CONCAT('%', '{{ email }}', '%')
+    {% endif %}
+    {% if phoneNumber and phoneNumber != '' %}
+      AND t1.phone_number LIKE CONCAT('%', '{{ phoneNumber }}', '%')
+    {% endif %}
+    {% if role %}
+      AND t1.role = {{ role }}
+    {% endif %}
+    {% if deptId %}
+      AND t1.dept_id = {{ deptId }}
+    {% endif %}
+    LIMIT {{ confined }}, {{ offset }};
