@@ -79,7 +79,7 @@ class Dept(db.Model):
         self.parent_id = parent_id
 
 
-class DeviceData(db.Model):
+class WellData(db.Model):
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     code = db.Column(db.String, nullable=False)
     dp = db.Column(DECIMAL(10, 2), nullable=False)

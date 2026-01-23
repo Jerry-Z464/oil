@@ -1,6 +1,6 @@
 import time
 from application import app, logger, db
-from application.entity import DeviceData
+from application.entity import WellData
 # from application.data_management.models.well_data import WellData
 # from application.data_management.modules.audit.audit_logger import AuditLogger
 # from application.data_management.modules.alert.alert_manager import AlertManager
@@ -18,15 +18,15 @@ def process_data(measurements):
         with app.app_context():
             # 数据库健康检查
             # 存储设备数据
-            device_data = DeviceData(code=measurements["wellCode"], dp=measurements["dp"], gvf=measurements["GVF"],
-                                     gas_flow_rate=measurements["gasFlowRate"],
-                                     liquid_flow_rate=measurements["liquidFlowRate"],
-                                     oil_flow_rate=measurements["oilFlowRate"],
-                                     pressure=measurements["pressure"],
-                                     temperature=measurements["temperature"],
-                                     water_cut=measurements["waterCut"],
-                                     water_flow_rate=measurements["waterFlowRate"])
-            db.session.add(device_data)
+            well_data = WellData(code=measurements["wellCode"], dp=measurements["dp"], gvf=measurements["GVF"],
+                                   gas_flow_rate=measurements["gasFlowRate"],
+                                   liquid_flow_rate=measurements["liquidFlowRate"],
+                                   oil_flow_rate=measurements["oilFlowRate"],
+                                   pressure=measurements["pressure"],
+                                   temperature=measurements["temperature"],
+                                   water_cut=measurements["waterCut"],
+                                   water_flow_rate=measurements["waterFlowRate"])
+            db.session.add(well_data)
             db.session.commit()
     except Exception as e:
         logger.error("采集数据失败：{}".format(str(e)))
