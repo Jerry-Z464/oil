@@ -15,20 +15,22 @@ from application.entity import DeviceData
 
 def process_data(measurements):
     try:
-        # 数据库健康检查
-        # 存储设备数据
-        device_data = DeviceData(code=measurements["wellCode"], dp=measurements["dp"], gvf=measurements["GVF"],
-                                 gas_flow_rate=measurements["gasFlowRate"],
-                                 liquid_flow_rate=measurements["liquidFlowRate"],
-                                 oil_flow_rate=measurements["oilFlowRate"],
-                                 pressure=measurements["pressure"],
-                                 temperature=measurements["temperature"],
-                                 water_cut=measurements["waterCut"],
-                                 water_flow_rate=measurements["waterFlowRate"])
-        db.session.add(device_data)
-        db.commit()
+        with app.app_context():
+            # 数据库健康检查
+            # 存储设备数据
+            device_data = DeviceData(code=measurements["wellCode"], dp=measurements["dp"], gvf=measurements["GVF"],
+                                     gas_flow_rate=measurements["gasFlowRate"],
+                                     liquid_flow_rate=measurements["liquidFlowRate"],
+                                     oil_flow_rate=measurements["oilFlowRate"],
+                                     pressure=measurements["pressure"],
+                                     temperature=measurements["temperature"],
+                                     water_cut=measurements["waterCut"],
+                                     water_flow_rate=measurements["waterFlowRate"])
+            db.session.add(device_data)
+            db.commit()
     except Exception as e:
         logger.error("采集数据失败：{}".format(str(e)))
+
 
 # class DataProcessor:
 #
