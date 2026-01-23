@@ -27,9 +27,9 @@ def process_data(measurements):
                                      water_cut=measurements["waterCut"],
                                      water_flow_rate=measurements["waterFlowRate"])
             db.session.add(device_data)
-            db.commit()
+            db.session.commit()
     except Exception as e:
-        logger.exception("采集数据失败：{}".format(str(e)))
+        logger.error("采集数据失败：{}".format(str(e)))
 
 
 # class DataProcessor:
