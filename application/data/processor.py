@@ -29,7 +29,7 @@ def process_data(measurements):
             db.session.add(device_data)
             db.commit()
     except Exception as e:
-        logger.error("采集数据失败：{}".format(str(e)))
+        logger.exception("采集数据失败：{}".format(str(e)))
 
 
 # class DataProcessor:
