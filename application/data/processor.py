@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from application import app, logger, db, data_analyzer
+from application import app, logger, db
 from application.entity import WellData
 from application.data.models import DataPoint
 
@@ -32,7 +32,7 @@ def process_data(measurements):
                               oil_flow=measurements["oilFlowRate"],
                               gas_flow=measurements["gasFlowRate"])
 
-            data_analyzer.add_data(measurements["wellCode"], point)
+            # data_analyzer.add_data(measurements["wellCode"], point)
 
     except Exception as e:
         logger.error("采集数据失败：{}".format(str(e)))
