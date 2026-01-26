@@ -35,6 +35,8 @@ def load_config():
         TOKEN_TIME = time_config["token"]
         # 采集数据间隔
         INTERVAL = time_config["interval"]
+        # 滚动窗口
+        ROLLING_WINDOW = time_config["rolling_window"]
 
     return config_original, Config
 

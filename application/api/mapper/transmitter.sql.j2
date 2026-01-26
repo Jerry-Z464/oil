@@ -1,0 +1,8 @@
+SELECT
+    t1.code,
+    t1.dp,
+    t1.pressure,
+    t1.create_time AS createTime
+FROM well_data t1
+WHERE t1.valid = 1
+    AND t1.create_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR)

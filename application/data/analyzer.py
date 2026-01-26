@@ -1,122 +1,89 @@
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-import statistics
-import logging
+from typing import Dict, List, Optional, Tuple
 from collections import deque, defaultdict
+import statistics
 from application import logger
-from config import Config
-from models.data_models import WellDataPoint, WaterCutSample
+from application.data.models import DataPoint
 
 
-class DataAnalyzer:
-    """数据分析器"""
+class TimeWindowDataStore:
+    """时间窗口数据存储，支持滑动窗口清理"""
 
-    def __init__(self, config: Config):
-        self.config = config
-        self.data_buffer = defaultdict(lambda: deque(maxlen=1440))  # 存储最近24小时数据
-        self.rolling_stats = defaultdict(dict)  # 滚动统计
+    def __init__(self, window_hours: int = 24):
+        self.window_hours = window_hours
+        # 按设备存储数据点
+        self.data: Dict[str, deque] = defaultdict(lambda: deque(maxlen=10000))
+        # 数据统计缓存
+        self.stats_cache: Dict[str, dict] = {}
+        self.cache_valid_minutes = 5
+        self.last_update_time: Dict[str, datetime] = {}
 
-    def add_data_point(self, device_id: str, data_point: WellDataPoint):
-        """添加数据点到分析器"""
-        if data_point:
-            self.data_buffer[device_id].append(data_point)
-            self._update_rolling_stats(device_id, data_point)
-
-    def _update_rolling_stats(self, device_id: str, data_point: WellDataPoint):
-        """更新滚动统计"""
-        if device_id not in self.rolling_stats:
-            self.rolling_stats[device_id] = {
-                'wc_sum': 0.0,
-                'count': 0,
-                'last_update': None
-            }
-
-        stats = self.rolling_stats[device_id]
-        stats['wc_sum'] += data_point.water_cut
-        stats['count'] += 1
-        stats['last_update'] = datetime.now()
-
-        # 清理超过24小时的数据
+    def add_data(self, device_id: str, data_point: DataPoint):
+        """添加数据点并清理旧数据"""
+        buffer = self.data[device_id]
+        buffer.append(data_point)
         self._clean_old_data(device_id)
+        self.stats_cache.pop(device_id, None)  # 使缓存失效
 
     def _clean_old_data(self, device_id: str):
-        """清理超过24小时的旧数据"""
-        cutoff_time = datetime.now() - self.config.WC_ROLLING_WINDOW
-        buffer = self.data_buffer[device_id]
+        """清理超过时间窗口的旧数据"""
+        cutoff_time = datetime.now() - timedelta(hours=self.window_hours)
+        buffer = self.data[device_id]
 
-        # 移除旧数据点
+        # 从左侧移除旧数据
         while buffer and buffer[0].timestamp < cutoff_time:
-            old_point = buffer.popleft()
-            # 从统计中减去
-            if device_id in self.rolling_stats:
-                self.rolling_stats[device_id]['wc_sum'] -= old_point.water_cut
-                self.rolling_stats[device_id]['count'] -= 1
+            buffer.popleft()
 
-    def get_water_cut_rolling_avg(self, device_id: str) -> Optional[float]:
-        """获取含水率24小时滚动平均值"""
-        if device_id not in self.rolling_stats:
-            return None
-
-        stats = self.rolling_stats[device_id]
-        if stats['count'] == 0:
-            return None
-
-        return stats['wc_sum'] / stats['count']
-
-    def calculate_data_loss_rate(self, device_id: str, hours: int = 24) -> float:
-        """计算数据丢失率"""
-        if device_id not in self.data_buffer:
-            return 1.0  # 100%丢失
-
-        expected_points = hours * 60  # 每分钟一个点
-        actual_points = len(self.data_buffer[device_id])
-
-        if expected_points == 0:
-            return 0.0
-
-        loss_rate = 1 - (actual_points / expected_points)
-        return max(0.0, min(1.0, loss_rate))
-
-    def detect_duplicate_data(self, device_id: str, new_point: WellDataPoint) -> bool:
-        """检测重复数据"""
-        if device_id not in self.data_buffer:
-            return False
-
-        # 检查最近数据中是否有重复
-        for point in list(self.data_buffer[device_id])[-10:]:  # 检查最近10个点
-            if (abs(point.timestamp - new_point.timestamp).total_seconds() < 1 and
-                    abs(point.pressure_psi - new_point.pressure_psi) < 0.1 and
-                    abs(point.water_cut - new_point.water_cut) < 0.001):
-                return True
-
-        return False
-
-    def check_temperature_flatline(self, device_id: str, duration_minutes: int = 10) -> bool:
-        """检查温度平线"""
-        if device_id not in self.data_buffer:
-            return False
-
-        buffer = list(self.data_buffer[device_id])
-        if len(buffer) < duration_minutes:
-            return False
-
-        # 检查最近duration_minutes分钟的温度变化
-        recent_temps = [point.temperature for point in buffer[-duration_minutes:]]
-        if len(recent_temps) < 2:
-            return False
-
-        # 计算温度标准差
-        temp_std = statistics.stdev(recent_temps) if len(recent_temps) > 1 else 0
-
-        # 如果标准差非常小，说明温度平线
-        return temp_std < 0.1  # 温度变化小于0.1度
-
-    def get_historical_data(self, device_id: str,
-                            start_time: datetime,
-                            end_time: datetime) -> List[WellDataPoint]:
-        """获取历史数据"""
-        if device_id not in self.data_buffer:
+    def get_data_in_window(self, device_id: str,
+                           start_time: datetime = None,
+                           end_time: datetime = None) -> List[DataPoint]:
+        """获取指定时间窗口内的数据"""
+        if device_id not in self.data:
             return []
 
-        return [point for point in self.data_buffer[device_id]
-                if start_time <= point.timestamp <= end_time]
+        if start_time is None:
+            start_time = datetime.now() - timedelta(hours=self.window_hours)
+        if end_time is None:
+            end_time = datetime.now()
+
+        return [
+            point for point in self.data[device_id]
+            if start_time <= point.timestamp <= end_time
+        ]
+
+    def calculate_data_loss_rate(self, device_id: str,
+                                 expected_interval_minutes: int = 1) -> float:
+        """计算数据丢失率"""
+        data_points = list(self.data[device_id])
+        if len(data_points) < 2:
+            return 1.0
+
+        # 按时间排序
+        sorted_points = sorted(data_points, key=lambda x: x.timestamp)
+
+        # 计算总时间范围和期望数据点数
+        total_minutes = self.window_hours * 60
+        expected_count = total_minutes / expected_interval_minutes
+
+        # 统计实际数据点
+        actual_count = len(sorted_points)
+
+        if expected_count == 0:
+            return 0.0
+
+        loss_rate = max(0.0, 1 - (actual_count / expected_count))
+        return round(loss_rate, 4)
+
+    def get_water_cut_average(self, device_id: str,
+                              hours: int = 24) -> Optional[float]:
+        """获取指定小时数的含水率平均值"""
+        cutoff_time = datetime.now() - timedelta(hours=hours)
+        data_points = [
+            point for point in self.data[device_id]
+            if point.timestamp >= cutoff_time
+        ]
+
+        if not data_points:
+            return None
+
+        return statistics.mean(point.water_cut for point in data_points)

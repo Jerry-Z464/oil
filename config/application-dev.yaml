@@ -13,6 +13,7 @@ server:
 
 time:
   token: 24 # token失效时间 单位:小时
-  interval: 60 # 采集数据间隔
+  interval: 60 # 采集数据间隔 单位:秒
+  rolling_window: 24 # 滚动窗口时间 单位:小时
 
 

@@ -5,6 +5,7 @@ from loguru import logger
 from flask import Flask, redirect
 from flask_cors import CORS
 from pymodbus.client.sync import ModbusSerialClient
+from application.data.analyzer import TimeWindowDataStore
 from config import load_config
 from flask_sqlalchemy import SQLAlchemy
 
@@ -65,10 +66,10 @@ try:
     db = SQLAlchemy(app)
     # 允许所有来源的跨域请求
     CORS(app)
-
+    # 初始化Modbus客户端
     modbus_client = ModbusSerialClient(
         method='rtu',
-        port='/dev/ttyCOM5',  # Windows系统使用'COM1'
+        port='/dev/ttyCOM5',
         baudrate=9600,
         parity='N',
         stopbits=1,
@@ -77,6 +78,26 @@ try:
     )
     if not modbus_client.connect():
         logger.error("Modbus init connection failed")
+    # max_size = int(Config.ROLLING_WINDOW * 60 / (Config.INTERVAL / 60))
+    # # 初始化数据分析器
+    # data_analyzer = TimeWindowDataStore(Config.ROLLING_WINDOW)
+
+    # # 配置参数
+    # config = {
+    #     'smtp_enabled': False,
+    #     'alert_recipients': ['admin@example.com'],
+    #     'interval_seconds': 60  # 采集间隔
+    # }
+    #
+    # # 1. 创建数据管理器
+    # data_manager = TimeWindowDataManager(config)
+    #
+    # # 2. 创建告警管理器
+    # alert_manager = UnifiedAlertManager(config, data_manager)
+    #
+    # # 3. 创建优化器
+    # optimizer = IntegratedOptimizer(config, data_manager, alert_manager)
+
 
 except Exception as e:
     logger.exception(e)
@@ -91,6 +112,7 @@ from application.api.controller.AccountController import account_bp
 from application.api.controller.SampleController import sample_bp
 from application.api.controller.MonitorController import monitor_bp
 from application.api.controller.AlarmController import alarm_bp
+from application.api.controller.DataController import data_bp
 
 # 将蓝图注册到应用程序
 app.register_blueprint(prefix_config_bp)
@@ -101,6 +123,7 @@ app.register_blueprint(dept_bp)
 app.register_blueprint(account_bp)
 app.register_blueprint(sample_bp)
 app.register_blueprint(alarm_bp)
+app.register_blueprint(data_bp)
 
 
 @app.route('/monitor')

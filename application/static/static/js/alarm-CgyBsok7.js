@@ -1,1 +1,0 @@
-import{aI as t}from"./index-DofruHnK.js";const l={getAlarmList:a=>t.get("/alarm/list",{params:a}),getAlarmDetail:a=>t.get("/alarm/byId",{params:a}),deleteAlarm:a=>t.postWithForm("/alarm/delete",{data:a})};export{l as a};

@@ -1,5 +1,5 @@
-from datetime import datetime
 from flask import Blueprint, request
+from application import db
 from application.api.models.alert import Alert
 from application.base import Result, DataResult, PageResult
 from application.base.AnalysisParam import Param, get_post_data
@@ -38,18 +38,57 @@ def get_alerts():
 @handle_exceptions(msg="获取数据流失败！")
 def get_device():
     params = [
+        Param(name='code', param_type=str, required=True),
         Param(name='startTime', param_type=str, required=False),
         Param(name='endTime', param_type=str, required=False)
     ]
-    current_time = datetime.now().strftime("%H:%M:%S")
+
+    data_list = render_sql(file_name('water_cut'))
+    results = db.session.execute(data_list).fetchall()
+
+    # 按照指定格式组织数据
     data = [
-      {"name": 'device01', "data": [{"time": '09:45', "value": 87.36}, {"time": '09:46', "value": 88.32},
-                                    {"time": '09:47', "value": 86.21}, {"time": '09:48', "value": 87.54}]},
-      {"name": 'device02', "data": [{"time": '09:45', "value": 84.25}, {"time": '09:46', "value": 84.87},
-                                    {"time": '09:47', "value": 85.69}, {"time": '09:48', "value": 87.25}]},
-      {"name": 'device03', "data": [{"time": '09:45', "value": 89.21}, {"time": '09:46', "value": 88.45},
-                                    {"time": '09:47', "value": 88.12}, {"time": '09:48', "value": 87.96}]}
+        {
+            "data": [],
+            "name": "gas flow rate(m³)"
+        },
+        {
+            "data": [],
+            "name": "liquid flow rate(m³)"
+        },
+        {
+            "data": [],
+            "name": "oil flow rate(m³)"
+        },
+        {
+            "data": [],
+            "name": "water flow rate(m³)"
+        }
     ]
+
+    # 将查询结果填充到数据结构中
+    for row in results:
+        gas_value = round(float(row.gas_flow_rate), 2)
+        liquid_value = round(float(row.liquid_flow_rate), 2)
+        oil_value = round(float(row.oil_flow_rate), 2)
+        water_value = round(float(row.water_flow_rate), 2)
+        time_value = row.createTime.strftime("%Y-%m-%d %H:%M:%S")
+        data[0]["data"].append({
+            "time": time_value,
+            "value": gas_value
+        })
+        data[1]["data"].append({
+            "time": time_value,
+            "value": liquid_value
+        })
+        data[2]["data"].append({
+            "time": time_value,
+            "value": oil_value
+        })
+        data[3]["data"].append({
+            "time": time_value,
+            "value": water_value
+        })
 
     return DataResult.success(data=data)
 
@@ -69,26 +108,19 @@ def get_database():
 @handle_exceptions(msg="获取温度数据失败！")
 def get_temperature():
     params = [
+        Param(name='code', param_type=str, required=False),
         Param(name='startTime', param_type=str, required=False),
         Param(name='endTime', param_type=str, required=False)
     ]
-    query = get_post_data(request, params)
-    data = [
-        {"name": "device01", "data": [{"time": '09:45', "value": 23.51},
-            {"time": '09:46', "value": 22.69},
-            {"time": '09:47', "value": 23.51},
-            {"time": '09:48', "value": 21.69},
-            {"time": '09:49', "value": 20.69},
-            {"time": '09:50', "value": 23.69},
-            ]},
-        {"name": "device02", "data": [{"time": '09:45', "value": 13.51},
-                                      {"time": '09:46', "value": 12.69},
-                                      {"time": '09:47', "value": 13.51},
-                                      {"time": '09:48', "value": 11.69},
-                                      {"time": '09:49', "value": 10.69},
-                                      {"time": '09:50', "value": 13.69},
-                                      ]}
-    ]
+    data_list = render_sql(file_name('temperature_list'))
+    results = db.session.execute(data_list).fetchall()
+
+    # 按照指定格式组织数据
+    data = {
+            "data": [{'time': item.createTime.strftime("%Y-%m-%d %H:%M:%S"),
+                      'value': round(float(item.temperature), 2)} for item in results],
+            "name": "temperature(℃)"
+        }
     return DataResult.success(data=data)
 
 
@@ -101,24 +133,44 @@ def get_transmitter():
         Param(name='endTime', param_type=str, required=False)
     ]
     query = get_post_data(request, params)
+
+    data_list = render_sql(file_name('transmitter'))
+    results = db.session.execute(data_list).fetchall()
+
+    # 按照指定格式组织数据
     data = [
         {
-            "data": [
-                {"time": '09:45', "value": 60.36}, {"time": '09:46', "value": 65.21},
-                {"time": '09:47', "value": 58.36}, {"time": '09:48', "value": 63.21}
-            ],
+            "data": [],
             "name": "Differential Pressure DP(kPa)",
+            "threshold": 500,
             "yAxisIndex": 0
         },
         {
-            "data": [
-                {"time": '09:45', "value": 305.32}, {"time": '09:46', "value": 306.52},
-                {"time": '09:47', "value": 307.84}, {"time": '09:48', "value": 910.52}
-            ],
+            "data": [],
             "name": "Pressure(psi)",
+            "threshold": 4600,
             "yAxisIndex": 1
         }
     ]
+
+    # 将查询结果填充到数据结构中
+    for row in results:
+        dp_value = round(float(row.dp), 2)
+        pressure_value = round(float(row.pressure), 2)
+        time_value = row.createTime.strftime("%Y-%m-%d %H:%M:%S")
+
+        # 添加DP数据
+        data[0]["data"].append({
+            "time": time_value,
+            "value": dp_value
+        })
+
+        # 添加Pressure数据
+        data[1]["data"].append({
+            "time": time_value,
+            "value": pressure_value
+        })
+
     return DataResult.success(data=data)
 
 

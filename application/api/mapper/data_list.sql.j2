@@ -1,0 +1,17 @@
+SELECT SQL_CALC_FOUND_ROWS
+        t1.id,
+        t1.code,
+        t1.dp,
+        t1.gvf,
+        t1.gas_flow_rate gasFlowRate,
+        t1.liquid_flow_rate liquidFlowRate,
+        t1.oil_flow_rate oilFlowRate,
+        t1.pressure,
+        t1.temperature,
+        IFNULL(t1.water_cut_optimizer, t1.water_cut) waterCut,
+        IF(t1.water_cut_optimizer IS NULL, 0, 1) status,
+        t1.water_flow_rate waterFlowRate,
+        t1.create_time createTime
+FROM well_data t1
+    WHERE t1.valid = 1
+    LIMIT {{ confined }}, {{ offset }};

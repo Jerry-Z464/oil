@@ -90,6 +90,7 @@ class WellData(db.Model):
     pressure = db.Column(DECIMAL(10, 2), nullable=False)
     temperature = db.Column(DECIMAL(10, 2), nullable=False)
     water_cut = db.Column(DECIMAL(10, 2), nullable=False)
+    water_cut_optimizer = db.Column(DECIMAL(10, 2), nullable=True)
     water_flow_rate = db.Column(DECIMAL(10, 2), nullable=False)
     create_time = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     update_time = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp(),
