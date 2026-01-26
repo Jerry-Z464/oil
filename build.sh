@@ -22,7 +22,7 @@ pyinstaller --onefile \
             --workpath "${DIST_DIR}/build" \
             --specpath "${DIST_DIR}" \
             --name "${APP_NAME}" \
-            "${SCRIPT_DIR}/main.py" || { echo "构建失败"; exit 1; }
+            "${SCRIPT_DIR}/setup.py" || { echo "构建失败"; exit 1; }
 
 # 3. 停止服务
 echo "正在停止服务..."
