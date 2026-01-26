@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from application import app, logger, db
 from application.entity import WellData
-from application.data.models import DataPoint
+# from application.data.models import DataPoint
 
 
 def process_data(measurements):
@@ -21,16 +21,16 @@ def process_data(measurements):
             db.session.add(well_data)
             db.session.commit()
 
-            point = DataPoint(device_id=str(measurements["wellCode"]),
-                              timestamp=datetime.now(),
-                              dp=measurements["dp"],
-                              pressure=measurements["pressure"],
-                              temperature=measurements["temperature"],
-                              water_cut=measurements["waterCut"],
-                              liquid_flow= measurements["liquidFlowRate"],
-                              water_flow=measurements["waterFlowRate"],
-                              oil_flow=measurements["oilFlowRate"],
-                              gas_flow=measurements["gasFlowRate"])
+            # point = DataPoint(device_id=str(measurements["wellCode"]),
+            #                   timestamp=datetime.now(),
+            #                   dp=measurements["dp"],
+            #                   pressure=measurements["pressure"],
+            #                   temperature=measurements["temperature"],
+            #                   water_cut=measurements["waterCut"],
+            #                   liquid_flow= measurements["liquidFlowRate"],
+            #                   water_flow=measurements["waterFlowRate"],
+            #                   oil_flow=measurements["oilFlowRate"],
+            #                   gas_flow=measurements["gasFlowRate"])
 
             # data_analyzer.add_data(measurements["wellCode"], point)
 
